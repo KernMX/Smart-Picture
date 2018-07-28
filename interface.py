@@ -2,7 +2,8 @@ from tkinter import *
 from tkinter import filedialog, messagebox
 from PIL import Image, ImageTk
 from math import floor
-from win32api import GetSystemMetrics
+
+import os, sys, argparse, json, colorsys, win32api
 
 class Window(Frame):
     def __init__(self, master):
@@ -38,10 +39,10 @@ class Window(Frame):
 
     def image_browser(self):
         # Folder path to the folder containing users pictures
-        folder_path = StringVar()
+        self.folder_path = StringVar()
 
         # Create Objects
-        self.pathtxt = Entry(width=20, state="disabled", text=folder_path)
+        self.pathtxt = Entry(width=50, state="disabled", text=self.folder_path)
         self.browse = Button(text="Browse", command=self.find_folder)
         label = Label(text="Select a folder containing your image files")
 
@@ -56,43 +57,37 @@ class Window(Frame):
         self.master.config(menu=menu)
 
         # Create the menu items
-        Preview = Menu(menu)
         Start = Menu(menu)
         Exit = Menu(menu)
 
         # Add commands to our menu options
-        Preview.add_command(label="Preview", command=self.previewShow)
         Start.add_command(label="Start", command=self.Begin)
         Exit.add_command(label="Exit", command=self.Quit)
 
         # Add in options and commands for the menu d
-        menu.add_cascade(label="Preview", menu=Preview)
         menu.add_cascade(label="Start", menu=Start)
         menu.add_cascade(label="Exit", menu=Exit)
 
-
+    def image_canvas():
+        return
 
     # Commands for window widgets
     # Application Quit
     def Quit(self):
         exit()
 
-    def previewShow(self):
-        text = Label(self, text="Previewing")
-        #text.pack(side="top")
-
     def Begin(self):
+        self.image_canvas()
+
+        extensions = ('.png', '.jpeg', '.bmp')
         text = Label(self, text="Starting")
-        #text.pack(side="top")
 
     def find_folder(self):
-        # Allow user to select a directory and store it in global var
-        # called folder_path
+        # Allow user to select a directory and store it in global var called folder_path
         global folder_path
         try:
             filename = filedialog.askdirectory()
-            folder_path = filename
-            print(folder_path)
+            self.folder_path.set(filename)
         except:
             messagebox.showerror("Error", "There was an error opening " + filename + "\n")
 
@@ -100,7 +95,7 @@ class Window(Frame):
 root = Tk()
 
 # Window size (half the users screen resolution by default)
-root.geometry(str(int(floor(GetSystemMetrics(0)/2))) + "x" + str(int(floor(GetSystemMetrics(1)/2))))
+root.geometry(str(int(floor(win32api.GetSystemMetrics(0)/2))) + "x" + str(int(floor(win32api.GetSystemMetrics(1)/2))))
 
 # Instance creation and execution
 app = Window(root)

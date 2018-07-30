@@ -1,86 +1,25 @@
 from tkinter import *
 from tkinter import filedialog, messagebox
+from itertools import cycle
 from PIL import Image, ImageTk
 from math import floor
+import os, win32api, time
 
-import os, sys, argparse, json, colorsys, win32api
-
-class Window(Frame):
+class Windows(Frame):
     def __init__(self, master):
-        Frame.__init__(self,master)
+        Frame.__init__(self)
         self.master = master
-        self.init_window()
+        self.browse_window()
 
-    def init_window(self):
-        # Giving the window a title
-        self.master.title("Smart Picture")
-
-        # create the widgets shown in the GUI
-        self.create_widgets()
-
-    # Widget Creation
-    def create_widgets(self):
-        self.create_menu()
-        self.create_radios()
-        self.image_browser()
-
-    # Individual Widget type Creation
-    def create_radios(self):
-        # Create Objects
-        self.normal = Radiobutton(text="Normal", value=1)
-        self.pixel_art = Radiobutton(text="Pixel Art", value=2)
-        label = Label(text="Select a conversion type")
-
-        # Place Objects
-        label.grid(column=0, row=0, columnspan=2)
-        self.normal.grid(column=0, row=1)
-        self.pixel_art.grid(column=1, row=1)
-
-
-    def image_browser(self):
+    def browse_window(self):
         # Folder path to the folder containing users pictures
         self.folder_path = StringVar()
 
         # Create Objects
-        self.pathtxt = Entry(width=50, state="disabled", text=self.folder_path)
-        self.browse = Button(text="Browse", command=self.find_folder)
-        label = Label(text="Select a folder containing your image files")
-
-        # Place Objects
-        label.grid(column=4, row=0, columnspan=2)
-        self.pathtxt.grid(column=5, row=1)
-        self.browse.grid(column=4, row=1)
-
-    def create_menu(self):
-        # Create the menu
-        menu = Menu(self.master)
-        self.master.config(menu=menu)
-
-        # Create the menu items
-        Start = Menu(menu)
-        Exit = Menu(menu)
-
-        # Add commands to our menu options
-        Start.add_command(label="Start", command=self.Begin)
-        Exit.add_command(label="Exit", command=self.Quit)
-
-        # Add in options and commands for the menu d
-        menu.add_cascade(label="Start", menu=Start)
-        menu.add_cascade(label="Exit", menu=Exit)
-
-    def image_canvas():
-        return
-
-    # Commands for window widgets
-    # Application Quit
-    def Quit(self):
-        exit()
-
-    def Begin(self):
-        self.image_canvas()
-
-        extensions = ('.png', '.jpeg', '.bmp')
-        text = Label(self, text="Starting")
+        Label(text="Select a folder containing your image files").pack(side=TOP, anchor=W, fill=X)
+        Entry(width=50, state="disabled", text=self.folder_path).pack(side=LEFT, anchor=W)
+        Button(text="Browse", command=self.find_folder).pack(side=LEFT, anchor=W)
+        Button(text="Start Slide Show", comman=self.start).pack(side=BOTTOM, fill=X, anchor=W)
 
     def find_folder(self):
         # Allow user to select a directory and store it in global var called folder_path
@@ -88,15 +27,48 @@ class Window(Frame):
         try:
             filename = filedialog.askdirectory()
             self.folder_path.set(filename)
+            directory = filename
         except:
             messagebox.showerror("Error", "There was an error opening " + filename + "\n")
+
+    def start(self):
+        if self.folder_path.get() == "":
+            messagebox.showerror("Error", "Select your image folder before starting the slide show.")
+        else:
+            self.slide_window()
+
+    def slide_window(self):
+        slides = Toplevel()
+        self.show()
+        slides.title('SlideShow')
+        picture_list = []
+
+        extensions = ['.png', '.jpeg', '.bmp', '.jpg']
+        for file in os.listdir(self.folder_path.get()):
+            for extension in extensions:
+                if file.endswith(extension):
+                    picture_list.append(self.folder_path+"/"+file)
+        if not picture_list:
+            messagebox.showeror("Error", "no files with compatible extensions found in " + self.folder_path)
+        else:
+            self.images = cycle((PhotoImage(Image.open(pic)), pic)
+                                for pic in picture_list)
+            self.display = Label(self)
+            self.display.pack()
+
+    def show(self):
+        next_im, im_name = next(self.images)
+        self.display.config(image=next_im)
+        self.title(im_name)
+        self.after(self.delay, self.run)
 
 # Window Created
 root = Tk()
 
 # Window size (half the users screen resolution by default)
-root.geometry(str(int(floor(win32api.GetSystemMetrics(0)/2))) + "x" + str(int(floor(win32api.GetSystemMetrics(1)/2))))
+#root.geometry(str(int(floor(win32api.GetSystemMetrics(0)/2))) + "x" + str(int(floor(win32api.GetSystemMetrics(1)/2))))
+root.geometry("400x100")
 
 # Instance creation and execution
-app = Window(root)
+app = Windows(root)
 app.mainloop()

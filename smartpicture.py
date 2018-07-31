@@ -1,5 +1,6 @@
 import os
 from wx import *
+from PIL import Image
 
 class PhotoCtrl(App):
     def __init__(self, redirect=False, filename=None):

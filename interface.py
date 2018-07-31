@@ -71,4 +71,5 @@ root.geometry("400x100")
 
 # Instance creation and execution
 app = Windows(root)
+app.after()
 app.mainloop()

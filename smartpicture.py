@@ -1,50 +1,75 @@
-from itertools import cycle
-try:
-    # Python2
-    import Tkinter as tk
-except ImportError:
-    # Python3
-    import tkinter as tk
+import os
+from wx import *
 
-class App(tk.Tk):
-    '''Tk window/label adjusts to size of image'''
-    def __init__(self, image_files, x, y, delay):
-        # the root will be self
-        tk.Tk.__init__(self)
-        # set x, y position only
-        self.geometry('+{}+{}'.format(x, y))
-        self.delay = delay
-        # allows repeat cycling through the pictures
-        # store as (img_object, img_name) tuple
-        self.pictures = cycle((tk.PhotoImage(file=image), image)
-                              for image in image_files)
-        self.picture_display = tk.Label(self)
-        self.picture_display.pack()
-    def show_slides(self):
-        '''cycle through the images and show them'''
-        # next works with Python26 or higher
-        img_object, img_name = next(self.pictures)
-        self.picture_display.config(image=img_object)
-        # shows the image filename, but could be expanded
-        # to show an associated description of the image
-        self.title(img_name)
-        self.after(self.delay, self.show_slides)
-    def run(self):
-        self.mainloop()
-# set milliseconds time between slides
-delay = 3500
-# get a series of gif images you have in the working folder
-# or use full path, or set directory to where the images are
-image_files = [
-'Slide_Farm.gif',
-'Slide_House.gif',
-'Slide_Sunset.gif',
-'Slide_Pond.gif',
-'Slide_Python.gif'
-]
-# upper left corner coordinates of app window
-x = 100
-y = 50
-app = App(image_files, x, y, delay)
-app.show_slides()
-app.run()
+class PhotoCtrl(App):
+    def __init__(self, redirect=False, filename=None):
+        App.__init__(self, redirect, filename)
+        self.frame = Frame(None, title='Picture Frame')
+
+        self.panel = Panel(self.frame)
+
+        self.PhotoMaxSize = 240
+
+        self.createWidgets()
+        self.frame.Show()
+
+    def createWidgets(self):
+        instructions = 'Browse for an image'
+        img = EmptyImage(240,240)
+        self.imageCtrl = StaticBitmap(self.panel, ID_ANY,
+                                         BitmapFromImage(img))
+
+        instructLbl = StaticText(self.panel, label=instructions)
+        self.photoTxt = TextCtrl(self.panel, size=(200,-1))
+        browseBtn = Button(self.panel, label='Browse')
+        browseBtn.Bind(EVT_BUTTON, self.onBrowse)
+
+        self.mainSizer = BoxSizer(VERTICAL)
+        self.sizer = BoxSizer(HORIZONTAL)
+
+        self.mainSizer.Add(StaticLine(self.panel, ID_ANY),
+                           0, ALL|EXPAND, 5)
+        self.mainSizer.Add(instructLbl, 0, ALL, 5)
+        self.mainSizer.Add(self.imageCtrl, 0, ALL, 5)
+        self.sizer.Add(self.photoTxt, 0, ALL, 5)
+        self.sizer.Add(browseBtn, 0, ALL, 5)
+        self.mainSizer.Add(self.sizer, 0, ALL, 5)
+
+        self.panel.SetSizer(self.mainSizer)
+        self.mainSizer.Fit(self.frame)
+
+        self.panel.Layout()
+
+    def onBrowse(self, event):
+        """
+        Browse for file
+        """
+        wildcard = "JPEG files (*.jpg)|*.jpg"
+        dialog = FileDialog(None, "Choose a file",
+                               wildcard=wildcard,
+                               style=FD_OPEN)
+        if dialog.ShowModal() == ID_OK:
+            self.photoTxt.SetValue(dialog.GetPath())
+        dialog.Destroy()
+        self.onView()
+
+    def onView(self):
+        filepath = self.photoTxt.GetValue()
+        img = Image(filepath, BITMAP_TYPE_ANY)
+        # scale the image, preserving the aspect ratio
+        W = img.GetWidth()
+        H = img.GetHeight()
+        if W > H:
+            NewW = self.PhotoMaxSize
+            NewH = self.PhotoMaxSize * H / W
+        else:
+            NewH = self.PhotoMaxSize
+            NewW = self.PhotoMaxSize * W / H
+        img = img.Scale(NewW,NewH)
+
+        self.imageCtrl.SetBitmap(BitmapFromImage(img))
+        self.panel.Refresh()
+
+if __name__ == '__main__':
+    app = PhotoCtrl()
+    app.MainLoop()
